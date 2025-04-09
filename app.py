@@ -6,61 +6,73 @@ from email.mime.multipart import MIMEMultipart
 
 st.set_page_config(page_title="Attendance Mailer", layout="centered")
 
-st.title("📧 Attendance Mailer System")
-st.write("Upload a CSV file with student attendance and send personalized emails.")
+st.title("📧 Attendance Mailer System (Grouped by Student)")
+st.write("Upload a CSV file with multiple course rows per student and send summary emails.")
 
-# Step 1: Upload CSV
+# Upload file
 uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
-    st.subheader("📄 Preview of Attendance Data")
+
+    st.subheader("📄 Preview of Uploaded Data")
     st.dataframe(df)
 
-    # Email sender credentials
-    st.subheader("✉️ Sender Gmail Details")
-    sender_email = st.text_input("Your Gmail address", placeholder="example@gmail.com")
+    # Email input
+    st.subheader("✉️ Email Credentials")
+    sender_email = st.text_input("Sender Gmail", placeholder="example@gmail.com")
     app_password = st.text_input("App Password", type="password")
 
-    # Subject and Message Template
-    st.subheader("📨 Email Content")
     subject = st.text_input("Email Subject", "Test Mail for Cloud Computing Assignment / Your Attendance Report")
-    message_template = st.text_area("Email Message Template", 
+    template = st.text_area("Message Template", 
         "Hi {name},\n\nHere is your attendance summary:\n\n{attendance}\n\nRegards,\nFaculty")
 
-    # Send Emails
     if st.button("📬 Send Emails"):
         if not sender_email or not app_password:
-            st.error("Please enter your Gmail and App Password.")
+            st.error("Please enter Gmail and App Password.")
         else:
+            # Group by student (assuming each student has unique Name)
+            grouped = df.groupby("Name")
+
             sent_count = 0
-            for i, row in df.iterrows():
-                name = row["Name"]
-                recipient_email = row["Email"]
 
-                # Format attendance string
-                attendance_info = "\n".join([
-                    f"{col}: {row[col]}" for col in df.columns if col not in ["Name", "Email"]
-                ])
+            for name, group in grouped:
+                attendance_lines = []
+                student_email = None
 
-                # Final message
-                message = message_template.format(name=name, attendance=attendance_info)
+                for _, row in group.iterrows():
+                    course = row["Course Name"]
+                    code = row["Course Code"]
+                    present = row["Present"]
+                    total = row["Total Sessions"]
+                    avg = row["Average"]
 
-                # Compose email
+                    # You can also use: student_email = row["Email"] if you have email column
+                    student_email = st.text_input(f"Enter email for {name}", key=name)
+
+                    attendance_lines.append(f"{course} ({code}): {present}/{total} - {avg}")
+
+                if not student_email:
+                    st.warning(f"No email entered for {name}, skipping.")
+                    continue
+
+                attendance_summary = "\n".join(attendance_lines)
+                final_message = template.format(name=name, attendance=attendance_summary)
+
                 msg = MIMEMultipart()
                 msg['From'] = sender_email
-                msg['To'] = recipient_email
+                msg['To'] = student_email
                 msg['Subject'] = subject
-                msg.attach(MIMEText(message, 'plain'))
+                msg.attach(MIMEText(final_message, 'plain'))
 
                 try:
                     with smtplib.SMTP("smtp.gmail.com", 587) as server:
                         server.starttls()
                         server.login(sender_email, app_password)
-                        server.sendmail(sender_email, recipient_email, msg.as_string())
+                        server.sendmail(sender_email, student_email, msg.as_string())
                         sent_count += 1
                 except Exception as e:
-                    st.error(f"❌ Failed to send to {recipient_email}: {e}")
+                    st.error(f"❌ Failed to send to {student_email}: {e}")
                     continue
 
             st.success(f"✅ Emails sent to {sent_count} students successfully!")
