@@ -13,10 +13,10 @@ uploaded_file = st.file_uploader("Upload CSV or Excel File", type=["csv", "xlsx"
 
 if uploaded_file:
     # Detect and read file format
-    if uploaded_file.name.endswith(".csv"):
-        df = pd.read_csv(uploaded_file)
-    elif uploaded_file.name.endswith(".xlsx"):
+    if uploaded_file.name.endswith(".xlsx"):
         df = pd.read_excel(uploaded_file)
+    elif uploaded_file.name.endswith(".csv"):
+        df = pd.read_csv(uploaded_file)
 
     st.subheader("📄 Preview of Uploaded Data")
     st.dataframe(df)
