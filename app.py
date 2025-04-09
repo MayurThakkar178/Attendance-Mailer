@@ -48,7 +48,8 @@ if uploaded_file:
                     avg = row["Average"]
 
                     # You can also use: student_email = row["Email"] if you have email column
-                    student_email = st.text_input(f"Enter email for {name}", key=name)
+                    student_email = st.text_input(f"Enter email for {name}", key=f"{name}_{group['Roll Number'].iloc[0]}")
+
 
                     attendance_lines.append(f"{course} ({code}): {present}/{total} - {avg}")
 
