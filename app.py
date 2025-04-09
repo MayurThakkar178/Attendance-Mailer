@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import smtplib
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -39,6 +40,7 @@ if uploaded_file:
 
             for (name, roll), group in grouped:
                 email = f"{roll}@nirmauni.ac.in"
+                st.write(f"📤 Sending email to: {name} <{email}>")
                 attendance_lines = []
 
                 for _, row in group.iterrows():
@@ -82,8 +84,10 @@ if uploaded_file:
                             server.login(sender_email, app_password)
                             server.sendmail(sender_email, email, msg.as_string())
                             sent_count += 1
+                            st.success(f"✅ Sent to {name} <{email}> successfully")
                     except Exception as e:
-                        st.error(f"❌ Failed to send to {email}: {e}")
+                        st.error(f"❌ Failed to send to {email} ({name}): {e}")
+                        time.sleep(1) 
                         continue
-
-            st.success(f"✅ Emails sent to {sent_count} students successfully!")
+                        else:
+                            st.info(f"✅ {name} has all attendance >= 85% — skipped.")
