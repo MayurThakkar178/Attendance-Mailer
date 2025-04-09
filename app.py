@@ -45,29 +45,32 @@ if uploaded_file:
                     avg = row["Average"]
 
                     attendance_lines = []
-for _, row in group.iterrows():
-    avg = float(str(row["Average"]).replace('%', '').strip())
-    if avg < 85:
-        course = row["Course Name"]
-        code = row["Course Code"]
-        present = row["Present"]
-        total = row["Total Sessions"]
-        attendance_lines.append(f"| {course:<22} | {code:<12} | {present}/{total:<7} | {avg:.2f}%{'':<10} |")
-
-if attendance_lines:
-    table_header = (
-        "+------------------------+--------------+---------+-------------------+\n"
-        "| Course Name            | Course Code  | Present | Attendance (%)    |\n"
-        "+------------------------+--------------+---------+-------------------+"
-    )
-    table_body = "\n".join(attendance_lines)
-    table_footer = "+------------------------+--------------+---------+-------------------+"
-
-    attendance_summary = f"{table_header}\n{table_body}\n{table_footer}"
-    final_message = f"Hi {name},\n\nHere is your attendance summary (Only subjects with attendance below 85%):\n\n{attendance_summary}\n\nPlease reach out to the course instructor if you have queries.\n\nRegards,\nFaculty"
-else:
-    continue  # skip sending if all subjects are >= 85%
-
+                    for _, row in group.iterrows():
+                        avg = float(str(row["Average"]).replace('%', '').strip())
+                        if avg < 85:
+                            course = row["Course Name"]
+                            code = row["Course Code"]
+                            present = row["Present"]
+                            total = row["Total Sessions"]
+                            attendance_lines.append(f"| {course:<22} | {code:<12} | {present}/{total:<7} | {avg:.2f}%{'':<10} |")
+                            if attendance_lines:
+                                table_header = (
+                                    "+------------------------+--------------+---------+-------------------+\n"
+                                    "| Course Name            | Course Code  | Present | Attendance (%)    |\n"
+                                    "+------------------------+--------------+---------+-------------------+"
+                                )
+                                table_body = "\n".join(attendance_lines)
+                                table_footer = "+------------------------+--------------+---------+-------------------+"
+                                attendance_summary = f"{table_header}\n{table_body}\n{table_footer}"
+                                final_message = (
+                                    f"Hi {name},\n\n"
+                                    f"Here is your attendance summary (Only subjects with attendance below 85%):\n\n"
+                                    f"{attendance_summary}\n\n"
+                                    f"Please reach out to the course instructor if you have queries.\n\n"
+                                    f"Regards,\nFaculty"
+                                )
+                            else:
+                                continue  # skip this student if all attendance >= 85%
 
                 attendance_summary = "\n".join(attendance_lines)
                 final_message = template.format(name=name, attendance=attendance_summary)
