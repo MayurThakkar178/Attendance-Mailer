@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 
 st.set_page_config(page_title="Attendance Mailer", layout="centered")
 st.title("📧 Attendance Mailer System")
-st.write("Upload a CSV and automatically email students their attendance summary.")
+st.write("Upload a CSV and automatically email students using roll numbers.")
 
 # Upload file
 uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
@@ -29,11 +29,12 @@ if uploaded_file:
         if not sender_email or not app_password:
             st.error("Please enter Gmail and App Password.")
         else:
-            # Group by Name and Email to ensure uniqueness
-            grouped = df.groupby(["Name", "Email"])
+            # Group by Name and Roll Number
+            grouped = df.groupby(["Name", "Roll Number"])
             sent_count = 0
 
-            for (name, email), group in grouped:
+            for (name, roll), group in grouped:
+                email = f"{roll}@nirmauni.ac.in"
                 attendance_lines = []
 
                 for _, row in group.iterrows():
