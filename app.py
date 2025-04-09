@@ -66,8 +66,8 @@ if uploaded_file:
                         f"Hi {name},\n\n"
                         f"Here is your attendance summary (Only subjects with attendance below 85%):\n\n"
                         f"{attendance_summary}\n\n"
-                        f"Please don't reach out to the course instructor if you have queries 😅.\n\n"
-                        f"Regards, 22BCE178"
+                        f"Please don't reach out to the course instructor if you have queries.\n\n"
+                        f"Regards,/nfaculty"
                     )
 
                     msg = MIMEMultipart()
