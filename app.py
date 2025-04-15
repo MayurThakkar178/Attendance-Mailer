@@ -26,17 +26,17 @@ if uploaded_file:
     sender_email = st.text_input("Sender Gmail", placeholder="example@gmail.com")
     app_password = st.text_input("App Password", type="password")
 
-    subject = st.text_input("Email Subject", "Test Mail for Cloud Computing Assignment/Your Attendance Report")
+    subject = st.text_input("Email Subject", "Test Mail for Cloud Computing Assignment / Your Attendance Report")
     template = st.text_area("Email Template", 
         "Hi {name},\n\nHere is your attendance summary:\n\n{attendance}\n\nRegards,\nFaculty")
 
     if st.button("📬 Send Emails"):
         if not sender_email or not app_password:
-            st.error("Please enter Gmail and App Password.")
+            st.error("❗ Please enter both Gmail and App Password.")
         else:
-            # Group by Name and Roll Number
             grouped = df.groupby(["Name", "Roll Number"])
             sent_count = 0
+            skipped_count = 0
 
             for (name, roll), group in grouped:
                 email = f"{roll}@nirmauni.ac.in"
@@ -44,15 +44,19 @@ if uploaded_file:
                 attendance_lines = []
 
                 for _, row in group.iterrows():
-                    avg = float(str(row["Average"]).replace('%', '').strip())
-                    if avg < 85:
-                        course = row["Course Name"]
-                        code = row["Course Code"]
-                        present = row["Present"]
-                        total = row["Total Sessions"]
-                        attendance_lines.append(
-                            f"| {course:<22} | {code:<12} | {present}/{total:<7} | {avg:.2f}%{'':<10} |"
-                        )
+                    try:
+                        avg = float(str(row["Average"]).replace('%', '').strip())
+                        if avg < 85:
+                            course = row["Course Name"]
+                            code = row["Course Code"]
+                            present = row["Present"]
+                            total = row["Total Sessions"]
+                            attendance_lines.append(
+                                f"| {course:<22} | {code:<12} | {present}/{total:<7} | {avg:.2f}%{'':<10} |"
+                            )
+                    except Exception as e:
+                        st.warning(f"⚠️ Error processing row: {e}")
+                        continue
 
                 if attendance_lines:
                     table_header = (
@@ -64,13 +68,7 @@ if uploaded_file:
                     table_footer = "+------------------------+--------------+---------+-------------------+"
                     attendance_summary = f"{table_header}\n{table_body}\n{table_footer}"
 
-                    final_message = (
-                        f"Hi {name},\n\n"
-                        f"Here is your attendance summary (Only subjects with attendance below 85%):\n\n"
-                        f"{attendance_summary}\n\n"
-                        f"Please don't reach out to the course instructor if you have queries.\n\n"
-                        f"Regards,/nfaculty"
-                    )
+                    final_message = template.format(name=name, attendance=attendance_summary)
 
                     msg = MIMEMultipart()
                     msg['From'] = sender_email
@@ -87,8 +85,10 @@ if uploaded_file:
                             st.success(f"✅ Sent to {name} <{email}> successfully")
                     except Exception as e:
                         st.error(f"❌ Failed to send to {email} ({name}): {e}")
-                        time.sleep(1) 
-                        continue
-                        else:
-                            st.info(f"✅ {name} has all attendance >= 85% — skipped.")
-                              st.success(f"📨
+                    
+                    time.sleep(1)  # Prevent spam block
+                else:
+                    st.info(f"✅ {name} has all attendance ≥ 85% — skipped.")
+                    skipped_count += 1
+
+            st.success(f"📨 Emails sent to {sent_count} students. Skipped {skipped_count} students with sufficient attendance.")
