@@ -91,3 +91,4 @@ if uploaded_file:
                         continue
                         else:
                             st.info(f"✅ {name} has all attendance >= 85% — skipped.")
+                              st.success(f"📨
